@@ -1,0 +1,16 @@
+# Exclude all node_modules
+node_modules/
+client/node_modules/
+server/node_modules/
+server/images/
+
+# Environment files
+.env
+client/.env
+server/.env
+!.env.example
+!client/.env.example
+!server/.env.example
+
+#other files
+client/dist/

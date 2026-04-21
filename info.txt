@@ -1,0 +1,346 @@
+Project Title:
+Garbage Collection Management System - Frontend Web UI
+
+Project Goal:
+Build a modern, responsive frontend-only web application for a private garbage collection company.
+This phase is UI-first with mock data and local state only (no backend).
+
+Confirmed Direction (Locked):
+- Use the existing template structure as-is.
+- Keep current navigation, sidebar behavior, and layout patterns from template.
+- No role-based access logic for now.
+- Admin, Driver, Accountant, Support, Supervisor are menu groups only.
+- Open directly to dashboards (no login flow in this phase).
+- Single-tenant only.
+- One shared sidebar only (existing sidebar).
+- Light mode only (static).
+
+--------------------------------------------------
+FOUNDATION RULES
+--------------------------------------------------
+
+1) Frontend-only
+- Do not build backend endpoints.
+- Do not add real authentication.
+- Do not add database connections.
+
+2) Data
+- Use centralized static mock data files.
+- Keep IDs and entity relationships realistic.
+- Prepare data shape to be easy to replace with APIs later.
+
+3) UI
+- Reuse template styles and component patterns.
+- Keep responsive behavior aligned with template standards.
+- Add loading, empty, and basic error UI states on data views.
+
+4) Architecture readiness
+- Keep a service layer for data access (even if mock only).
+- Use consistent response shape in mock services:
+  - Success: { code: 1, data, message }
+  - Error: { code: 2, message }
+
+--------------------------------------------------
+MAIN APP MENU STRUCTURE
+--------------------------------------------------
+
+Top-level menus in sidebar:
+1. Customer Portal
+2. Management Portal
+
+Important:
+- These are navigation groups.
+- No permission checks yet.
+- All pages should be reachable in current phase.
+
+--------------------------------------------------
+A. CUSTOMER PORTAL
+--------------------------------------------------
+
+Purpose:
+Simple customer-facing experience to manage pickups, payments, complaints, and profile.
+
+Pages:
+
+1. Customer Dashboard
+- Welcome card
+- Current subscription plan
+- Next pickup date
+- Pickup status card
+- Quick actions:
+  - Book Pickup
+  - Make Payment
+  - Report Complaint
+  - View History
+- Summary cards:
+  - Active Plan
+  - Payment Status
+  - Upcoming Pickup
+  - Complaints Count
+
+2. Subscription / Plans
+- Plan cards:
+  - Weekly Pickup
+  - Bi-Weekly Pickup
+  - One-Time Pickup
+  - Business Plan
+- Each card shows:
+  - Price
+  - Features
+  - Pickup frequency
+  - Select button
+
+3. Book Pickup
+- Form UI only:
+  - Waste type
+  - Pickup date
+  - Pickup address
+  - Landmark
+  - Notes
+  - Extra bin option
+  - Emergency pickup option
+- Submit button
+- Booking summary card (side panel)
+
+4. Pickup Tracking
+- Timeline/status tracker:
+  - Scheduled
+  - Assigned
+  - On The Way
+  - Completed
+- Driver info card
+- Pickup history table
+
+5. Payments
+- Outstanding balance card
+- Payment method cards
+- Payment history table
+- Pay Now button
+- Subscription renewal section
+- Transaction status badges
+
+6. Complaints / Support
+- Complaint submission form
+- Categories:
+  - Missed Pickup
+  - Damaged Bin
+  - Late Pickup
+  - Billing Issue
+  - General Complaint
+- Complaint history list/table
+- Ticket badges:
+  - Open
+  - In Progress
+  - Resolved
+
+7. Profile
+- Customer details
+- Address
+- Contact info
+- Account settings UI
+- Notification preferences
+- Change password section (UI only)
+
+--------------------------------------------------
+B. MANAGEMENT PORTAL
+--------------------------------------------------
+
+Purpose:
+Internal operations interface grouped by department menu sections.
+
+Note:
+- Role names are used as menu labels only in this phase.
+- No role-based routing or guards yet.
+
+Management menu groups:
+- Admin
+- Driver
+- Accountant
+- Support
+- Supervisor
+
+------------------------------
+ADMIN MENUS
+------------------------------
+
+1. Admin Dashboard
+- Total Customers
+- Active Subscriptions
+- Today Pickups
+- Pending Complaints
+- Revenue Snapshot
+- Chart placeholders
+- Recent activity list
+- Pickup status overview
+
+2. Customer Management
+- Customer table
+- Search
+- Filters: status, zone, plan
+- Customer profile drawer/modal
+- Add customer button
+
+3. Pickup Management
+- Pickup table
+- Filters: date, status, zone, driver
+- Actions: Assign Driver, Edit Pickup, View Details
+
+4. Driver Assignment
+- Pickup request list
+- Available driver list
+- Assignment UI (card-based or drag/drop)
+- Route preview panel
+
+5. Zones and Routes
+- Zone cards/list
+- Route table
+- Map placeholder
+- Assign zone to driver UI
+
+6. Complaints Overview
+- Complaint list
+- Status tracking
+- Assign to support UI
+
+7. Reports Overview
+- Summary charts
+- Pickup completion report preview
+- Revenue report preview
+- Customer growth preview
+
+------------------------------
+DRIVER MENUS
+------------------------------
+
+1. Driver Dashboard
+- Today assigned pickups
+- Completed pickups count
+- Pending pickups count
+- Route summary card
+- Quick action: Start Route
+
+2. Assigned Pickups
+- Card list or table
+- Each item: customer, address, waste type, time, status
+- Actions: View Details, Mark Completed, Upload Proof
+
+3. Pickup Detail
+- Customer info
+- Contact info
+- Address + map placeholder
+- Notes
+- Waste type
+- Mark completed button
+- Upload proof placeholder
+- QR scan placeholder
+
+4. Route
+- Route list
+- Map placeholder
+- Stop order timeline
+
+------------------------------
+ACCOUNTANT MENUS
+------------------------------
+
+1. Accountant Dashboard
+- Total revenue
+- Pending payments
+- Paid invoices
+- Monthly collection summary
+- Revenue chart placeholder
+
+2. Payments Management
+- Transactions table
+- Filters: Paid, Pending, Failed
+- Search customer
+- Transaction details modal
+
+3. Invoices
+- Invoice cards/table
+- Invoice status badges
+- Download/View UI buttons
+
+4. Financial Reports
+- Revenue report cards
+- Collection trends chart placeholder
+- Export UI buttons
+
+------------------------------
+SUPPORT MENUS
+------------------------------
+
+1. Support Dashboard
+- Open tickets
+- In-progress tickets
+- Resolved tickets
+- Recent complaints list
+
+2. Ticket Management
+- Ticket table
+- Filters by type and status
+- Ticket detail panel
+- Reply box UI
+- Mark resolved button
+
+3. Customer Issue Detail
+- Ticket info
+- Customer info
+- Issue timeline
+- Internal notes
+- Resolution status dropdown
+
+------------------------------
+SUPERVISOR MENUS
+------------------------------
+
+1. Supervisor Dashboard
+- Driver performance summary
+- Missed pickups
+- Completed pickups
+- Daily operations overview
+
+2. Driver Monitoring
+- Driver list
+- Performance cards
+- Completion percentage
+- Late pickups count
+- Route adherence placeholder
+
+3. Pickup Oversight
+- View all pickups
+- Flag missed pickups
+- Review completed tasks
+- Approve/reject proof submission UI
+
+--------------------------------------------------
+MOCK DATA REQUIRED
+--------------------------------------------------
+
+Create static mock data for:
+- Customers
+- Drivers
+- Pickup requests
+- Payments
+- Subscription plans
+- Complaints
+- Tickets
+- Zones
+- Routes
+- Notifications
+- Revenue summary
+
+Mock data quality rules:
+- Use realistic names, addresses, dates, statuses, and currency values.
+- Keep relations valid (example: pickup.customerId must exist in customers list).
+- Include enough records for pagination and filters.
+
+--------------------------------------------------
+EXPECTED OUTPUT
+--------------------------------------------------
+
+The final frontend should:
+- Match template navigation/layout behavior.
+- Be responsive and clean in light mode.
+- Use reusable components and centralized mock data.
+- Be easy to connect to backend APIs later without major refactor.

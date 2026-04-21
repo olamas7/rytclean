@@ -1,0 +1,16 @@
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+h4 {
+  animation: fadeIn 2s ease-in-out;
+}
+
+.subtitle1 {
+  animation: fadeIn 2.5s ease-in-out;
+}
