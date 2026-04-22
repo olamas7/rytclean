@@ -1,6 +1,6 @@
-# App Starter Server
+# RytClean Server
 
-Express + MySQL API starter with JWT auth.
+Express + MySQL API backend for RytClean with JWT auth.
 
 ## Commands
 

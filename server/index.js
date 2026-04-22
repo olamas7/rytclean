@@ -12,12 +12,14 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const logins = require("./Routes/logins");
+const adminSetup = require("./Routes/adminSetup");
 
 const apiRoutes = express.Router();
 
 apiRoutes.use(express.static("images"));
 
 apiRoutes.use("/login", logins);
+apiRoutes.use("/admin", adminSetup);
 
 app.use("/api", apiRoutes);
 

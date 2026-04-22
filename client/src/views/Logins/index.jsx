@@ -1,17 +1,16 @@
 import React from 'react';
-import { Box, Typography, useTheme, Grid, Stack, Paper } from '@mui/material';
+import { Box, Typography, Grid, Stack, Paper } from '@mui/material';
 import { motion } from 'framer-motion';
 
 import { PointOfSale, Storefront, TrendingUp, Security } from '@mui/icons-material';
 import SimpleLogin from './SimpleLogin';
+import { APP_MOTTO, APP_NAME } from 'constants/branding';
 
 export default function LoginPage() {
-  const theme = useTheme();
-
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', bgcolor: 'background.paper' }}>
       <Grid container>
-        {/* Left Side: Professional POS Branding */}
+        {/* Left Side: Brand Panel */}
         <Grid
           item
           xs={false}
@@ -70,13 +69,13 @@ export default function LoginPage() {
 
               <Box>
                 <Typography variant="h1" sx={{ color: 'white', fontWeight: 900, fontSize: '4rem', mb: 1, letterSpacing: -1 }}>
-                  App Starter
+                  {APP_NAME}
                 </Typography>
                 <Typography
                   variant="h4"
                   sx={{ color: 'rgba(255,255,255,0.9)', fontWeight: 500, letterSpacing: 2, textTransform: 'uppercase' }}
                 >
-                  Ready to Build
+                  {APP_MOTTO}
                 </Typography>
               </Box>
 
@@ -96,7 +95,7 @@ export default function LoginPage() {
               </Stack>
 
               <Typography variant="body1" sx={{ maxWidth: 450, color: 'rgba(255,255,255,0.7)', lineHeight: 1.8, mt: 4 }}>
-                Start every project from a clean foundation with authentication, protected routes, and reusable components.
+                Manage smarter waste operations across customer and management portals with one clean workflow.
               </Typography>
             </Stack>
           </motion.div>
@@ -121,7 +120,7 @@ export default function LoginPage() {
             <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', alignItems: 'center', mb: 6 }}>
               <PointOfSale sx={{ fontSize: 50, color: 'primary.main', mb: 1 }} />
               <Typography variant="h2" sx={{ fontWeight: 900, color: 'primary.main' }}>
-                App Starter
+                {APP_NAME}
               </Typography>
             </Box>
 
@@ -132,8 +131,8 @@ export default function LoginPage() {
 
               <Box sx={{ mt: 8, textAlign: 'center' }}>
                 <Typography variant="caption" color="text.secondary" sx={{ opacity: 0.6 }}>
-                  © {new Date().getFullYear()} Starter Template. <br />
-                  Build your next app
+                  © {new Date().getFullYear()} {APP_NAME}. <br />
+                  {APP_MOTTO}
                 </Typography>
               </Box>
             </motion.div>

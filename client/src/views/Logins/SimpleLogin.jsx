@@ -12,6 +12,8 @@ import { RHFTextField } from 'utils/controls/ReactHookForms';
 import { SnackError, SnackSuccess } from 'utils/Snackbars';
 import Axios from 'axios';
 import { LdButton } from 'utils/myButtons';
+import { APP_NAME } from 'constants/branding';
+import { defaultRoute } from 'constants/appRoutes';
 import { 
     PersonOutline, 
     LockOutlined, 
@@ -48,7 +50,7 @@ export default function SimpleLogin() {
         setSnackMessage('Login successful. Redirecting...');
         setOpenSuccess(true);
         setTimeout(() => {
-          window.location.href = '/dashboard/home';
+          window.location.href = defaultRoute;
         }, 700);
       } else {
         setSnackMessage(res.data.message || 'Invalid Credentials.');
@@ -73,7 +75,7 @@ export default function SimpleLogin() {
             Welcome Back
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Sign in to continue to your application.
+            Sign in to continue to {APP_NAME}.
           </Typography>
         </Box>
 

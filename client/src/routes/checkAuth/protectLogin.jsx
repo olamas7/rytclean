@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
 import isAuthenticated from './isAuthenticated';
+import { defaultRoute } from 'constants/appRoutes';
 
 const ProtectedRoute = ({ element }) => {
   const [authenticated, setAuthenticated] = useState(false);
@@ -22,7 +23,7 @@ const ProtectedRoute = ({ element }) => {
     return <div>Loading...</div>; // Show loading state while checking auth
   }
 
-  return !authenticated ? element : <Navigate to="/dashboard/home" />;
+  return !authenticated ? element : <Navigate to={defaultRoute} />;
 };
 
 export default ProtectedRoute;

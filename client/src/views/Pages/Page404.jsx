@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Button, Typography, Container } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { PointOfSale, Home } from '@mui/icons-material';
+import { APP_NAME } from 'constants/branding';
 
 const Page404 = () => {
     const navigate = useNavigate();
@@ -26,7 +27,7 @@ const Page404 = () => {
                     Oops! Page Not Found
                 </Typography>
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 500, mx: 'auto' }}>
-                    The page you are looking for might have been removed, had its name changed, or is temporarily unavailable in the RytSales system.
+                    The page you are looking for might have been removed, had its name changed, or is temporarily unavailable in the {APP_NAME} system.
                 </Typography>
                 <Button 
                     variant="contained" 

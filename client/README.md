@@ -1,6 +1,6 @@
-# App Starter Client
+# RytClean Client
 
-React 18 + Vite starter with MUI, Redux, reusable UI helpers, and auth-aware routing.
+React 18 + Vite frontend for RytClean with MUI, Redux, reusable UI helpers, and auth-aware routing.
 
 ## Commands
 

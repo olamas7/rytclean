@@ -1,21 +1,22 @@
 import React from 'react';
 import { Box, Grid, Paper, Typography } from '@mui/material';
 import { AutoAwesome, Login, Widgets } from '@mui/icons-material';
+import { APP_MOTTO, APP_NAME } from 'constants/branding';
 
 const cards = [
   {
     title: 'Authentication Ready',
-    description: 'JWT login, protected routes, and permission guard are wired and ready for your new app.',
+    description: 'JWT login, protected routes, and permission guard are wired for secure access across modules.',
     icon: <Login color="primary" />
   },
   {
     title: 'Reusable Components',
-    description: 'Your custom UI components in ui-component and utils are kept for rapid feature building.',
+    description: 'Reusable UI building blocks are in place to ship features faster with consistent styling.',
     icon: <Widgets color="primary" />
   },
   {
-    title: 'Starter Friendly',
-    description: 'Business-specific POS screens are detached so you can rename and build a fresh product quickly.',
+    title: 'Waste Operations Ready',
+    description: 'Customer and management flows are set up for day-to-day collection, tracking, payments, and support.',
     icon: <AutoAwesome color="primary" />
   }
 ];
@@ -27,10 +28,10 @@ const AdminDashboard = () => {
     <Box sx={{ p: { xs: 1, md: 2 } }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h2" sx={{ fontWeight: 800, mb: 1 }}>
-          Starter Dashboard
+          {APP_NAME} Dashboard
         </Typography>
         <Typography variant="subtitle1" color="text.secondary">
-          Welcome, <strong>{name}</strong>. Your template is clean and ready for a new project.
+          Welcome, <strong>{name}</strong>. {APP_MOTTO}
         </Typography>
       </Box>
 

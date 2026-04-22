@@ -1,6 +1,6 @@
-# App Starter Template
+# RytClean
 
-Reusable full-stack starter for quickly bootstrapping new apps.
+Cleaner Today, Greener Tomorrow.
 
 ## What is included
 

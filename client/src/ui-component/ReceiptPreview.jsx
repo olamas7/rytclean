@@ -20,6 +20,7 @@ import { Print, Receipt } from '@mui/icons-material';
 import { format } from 'date-fns';
 import useSWR from 'swr';
 import Axios from 'axios';
+import { APP_NAME } from 'constants/branding';
 
 const fetcher = url => Axios.get(url).then(res => res.data.data);
 
@@ -84,7 +85,7 @@ const ReceiptPreview = ({ open, onClose, sale, items }) => {
                     >
                         <Box sx={{ textAlign: 'center', mb: 2 }}>
                             <Typography variant="h4" sx={{ fontWeight: 900, textTransform: 'uppercase', fontFamily: 'monospace' }}>
-                                {activeShopName || facility?.name || 'RytSales POS'}
+                                {activeShopName || facility?.name || APP_NAME}
                             </Typography>
                             <Typography sx={{ fontSize: '0.7rem', fontFamily: 'monospace' }}>{facility?.location || 'Ghana, West Africa'}</Typography>
                             <Typography sx={{ fontSize: '0.7rem', fontFamily: 'monospace' }}>{facility?.phone || '+233 50 000 0000'}</Typography>
