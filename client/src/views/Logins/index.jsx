@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import { PointOfSale, Storefront, TrendingUp, Security } from '@mui/icons-material';
 import SimpleLogin from './SimpleLogin';
 import { APP_MOTTO, APP_NAME } from 'constants/branding';
+import { Link } from 'react-router-dom';
+import { LdButton } from 'utils/myButtons';
 
 export default function LoginPage() {
   return (
@@ -127,6 +129,10 @@ export default function LoginPage() {
             <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: 0.2 }}>
               <Paper elevation={0} sx={{ p: { xs: 0, sm: 4 }, bgcolor: 'transparent' }}>
                 <SimpleLogin />
+                <Stack spacing={1} sx={{ mt: 3 }}>
+                  <LdButton component={Link} to="/pay" variant="outlined">Pay with Customer ID</LdButton>
+                  <Typography variant="body2" textAlign="center">Or dial <strong>*412*99#</strong> to pay by USSD.</Typography>
+                </Stack>
               </Paper>
 
               <Box sx={{ mt: 8, textAlign: 'center' }}>

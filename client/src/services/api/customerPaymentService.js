@@ -1,0 +1,10 @@
+import axios from 'axios';
+const root = '/api/customer-payments';
+const data = (response) => { if (response.data.code !== 1) throw new Error(response.data.message || 'Payment request failed.'); return response.data.data; };
+const config = (token) => ({ headers: { 'x-payment-session': token } });
+export const paymentConfiguration = async () => data(await axios.get(`${root}/config`));
+export const lookupPaymentCustomer = async (customerId) => data(await axios.post(`${root}/lookup`, { customerId }));
+export const initiateCustomerPayment = async (token, payload) => data(await axios.post(`${root}/charge`, payload, config(token)));
+export const checkCustomerPayment = async (token, reference) => data(await axios.get(`${root}/status/${encodeURIComponent(reference)}`, config(token)));
+export const recoverCustomerPayment = async (token) => data(await axios.get(`${root}/current`, config(token)));
+export const submitPaymentOtp = async (token, reference, otp) => data(await axios.post(`${root}/otp`, { reference, otp }, config(token)));

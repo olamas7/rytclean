@@ -1,99 +1,29 @@
 import PropTypes from 'prop-types';
-import { useMemo } from 'react';
-import { Box, Stack, Typography } from '@mui/material';
-import { MapContainer, Polyline, TileLayer, useMapEvents } from 'react-leaflet';
+import { useRef } from 'react';
+import { Stack, Typography } from '@mui/material';
+import GoogleMap, { MapFitBounds } from 'ui-component/maps/GoogleMap';
+import { MapMarker, MapShape } from 'ui-component/maps/MapOverlays';
+import { linePoints, toLineGeoJson } from 'services/googleMaps';
 import { LdButton } from 'utils/myButtons';
 
-const DEFAULT_CENTER = [5.6037, -0.187];
-
-const toLatLngPoints = (geoJson) => {
-    if (!geoJson || geoJson.type !== 'LineString' || !Array.isArray(geoJson.coordinates)) {
-        return [];
-    }
-
-    return geoJson.coordinates.map(([lng, lat]) => [Number(lat), Number(lng)]);
-};
-
-const toLineString = (points) => {
-    if (!points || !points.length) {
-        return null;
-    }
-
-    return {
-        type: 'LineString',
-        coordinates: points.map(([lat, lng]) => [Number(lng), Number(lat)])
-    };
-};
-
-const RouteClickCapture = ({ onAddPoint }) => {
-    useMapEvents({
-        click: (event) => {
-            const { lat, lng } = event.latlng;
-            onAddPoint([Number(lat.toFixed(6)), Number(lng.toFixed(6))]);
-        }
-    });
-
-    return null;
-};
-
-RouteClickCapture.propTypes = {
-    onAddPoint: PropTypes.func.isRequired
-};
-
 const RoutePathMapField = ({ value, onChange }) => {
-    const points = useMemo(() => toLatLngPoints(value), [value]);
-    const center = points.length ? points[0] : DEFAULT_CENTER;
-
-    const addPoint = (point) => {
-        onChange(toLineString([...points, point]));
-    };
-
-    const removeLast = () => {
-        if (!points.length) {
-            return;
-        }
-        onChange(toLineString(points.slice(0, -1)));
-    };
-
-    const clearAll = () => {
-        onChange(null);
-    };
-
-    return (
-        <Box>
-            <Typography variant="subtitle2" sx={{ mb: 0.75 }}>
-                Route Path (click map to add points)
-            </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                Add at least 2 points to define the route line.
-            </Typography>
-
-            <Box sx={{ height: 320, borderRadius: 1.5, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
-                <MapContainer center={center} zoom={13} style={{ height: '100%', width: '100%' }}>
-                    <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    <RouteClickCapture onAddPoint={addPoint} />
-                    {points.length > 0 && <Polyline positions={points} pathOptions={{ color: '#265074', weight: 4 }} />}
-                </MapContainer>
-            </Box>
-
-            <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                <LdButton variant="outlined" color="secondary" onClick={removeLast} disabled={!points.length}>
-                    Remove Last Point
-                </LdButton>
-                <LdButton variant="outlined" color="error" onClick={clearAll} disabled={!points.length}>
-                    Clear Route Path
-                </LdButton>
-            </Stack>
-        </Box>
-    );
+    const points = linePoints(value);
+    const initialPoints = useRef(points);
+    return <Stack spacing={1.25}>
+        <Typography variant="subtitle2">Route Path</Typography>
+        <Typography variant="caption" color="text.secondary">Click to add at least 2 points. Drag the points or midpoint handles to adjust the path. This is a manually planned line, not a calculated driving route.</Typography>
+        <GoogleMap height={340} label="Edit collection route path" onClick={(point) => onChange(toLineGeoJson([...points, point]))}>
+            <MapFitBounds points={initialPoints.current} />
+            {points.length === 1 && <MapMarker position={points[0]} title="Route start" />}
+            {points.length > 0 && <MapShape paths={[points]} editable onChange={(paths) => onChange(toLineGeoJson(paths[0] || []))} />}
+        </GoogleMap>
+        <Typography variant="caption" color="text.secondary">{points.length} route point{points.length === 1 ? '' : 's'} selected</Typography>
+        <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
+            <LdButton variant="outlined" color="secondary" onClick={() => onChange(toLineGeoJson(points.slice(0, -1)))} disabled={!points.length}>Remove Last Point</LdButton>
+            <LdButton variant="outlined" color="error" onClick={() => onChange(null)} disabled={!points.length}>Clear Route Path</LdButton>
+        </Stack>
+    </Stack>;
 };
 
-RoutePathMapField.propTypes = {
-    value: PropTypes.object,
-    onChange: PropTypes.func.isRequired
-};
-
+RoutePathMapField.propTypes = { value: PropTypes.oneOfType([PropTypes.object, PropTypes.string]), onChange: PropTypes.func.isRequired };
 export default RoutePathMapField;

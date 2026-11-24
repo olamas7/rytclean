@@ -19,8 +19,12 @@ const CustomerPayments = Loadable(lazy(() => import('views/Customer/CustomerPaym
 const CustomerComplaints = Loadable(lazy(() => import('views/Customer/CustomerComplaints')));
 const CustomerProfile = Loadable(lazy(() => import('views/Customer/CustomerProfile')));
 const AdminDashboard = Loadable(lazy(() => import('views/Management/Admin/AdminDashboard')));
+const AdminSettings = Loadable(lazy(() => import('views/Management/Admin/Settings')));
+const Configuration = Loadable(lazy(() => import('views/Admin/Configuration')));
 const UserManager = Loadable(lazy(() => import('views/Management/Admin/UserManager')));
 const CustomerManagement = Loadable(lazy(() => import('views/Management/Admin/CustomerManagement')));
+const ClientBilling = Loadable(lazy(() => import('views/Management/Accountant/BillingWorkspace')));
+const SmsNotifications = Loadable(lazy(() => import('views/Management/Admin/SmsNotifications')));
 const PickupManagement = Loadable(lazy(() => import('views/Management/Admin/PickupManagement')));
 const DriverAssignment = Loadable(lazy(() => import('views/Management/Admin/DriverAssignment')));
 const ZonesRoutes = Loadable(lazy(() => import('views/Management/Admin/ZonesRoutes')));
@@ -36,6 +40,7 @@ const CustomerIssueDetail = Loadable(lazy(() => import('views/Management/Support
 const AccountantDashboard = Loadable(lazy(() => import('views/Management/Accountant/AccountantDashboard')));
 const PaymentsManagement = Loadable(lazy(() => import('views/Management/Accountant/PaymentsManagement')));
 const Invoices = Loadable(lazy(() => import('views/Management/Accountant/Invoices')));
+const RouteFuel = Loadable(lazy(() => import('views/Management/Accountant/RouteFuel')));
 const FinancialReports = Loadable(lazy(() => import('views/Management/Accountant/FinancialReports')));
 const SupervisorDashboard = Loadable(lazy(() => import('views/Management/Supervisor/SupervisorDashboard')));
 const DriverMonitoring = Loadable(lazy(() => import('views/Management/Supervisor/DriverMonitoring')));
@@ -45,6 +50,10 @@ const PickupOversight = Loadable(lazy(() => import('views/Management/Supervisor/
 const DashboardDefault = Loadable(lazy(() => import('views/Dashboard')));
 
 const buildPageElement = (page) => {
+    if (page.path === appRoutes.admin.configuration) {
+        return <Configuration />;
+    }
+
     if (page.path === appRoutes.customer.dashboard) {
         return <CustomerDashboard />;
     }
@@ -77,12 +86,24 @@ const buildPageElement = (page) => {
         return <AdminDashboard />;
     }
 
+    if (page.path === appRoutes.management.admin.settings) {
+        return <AdminSettings />;
+    }
+
     if (page.path === appRoutes.management.admin.users) {
         return <UserManager />;
     }
 
     if (page.path === appRoutes.management.admin.customers) {
         return <CustomerManagement />;
+    }
+
+    if (page.path === appRoutes.management.admin.billing) {
+        return <ClientBilling />;
+    }
+
+    if (page.path === appRoutes.management.admin.sms) {
+        return <SmsNotifications />;
     }
 
     if (page.path === appRoutes.management.admin.pickups) {
@@ -144,6 +165,7 @@ const buildPageElement = (page) => {
     if (page.path === appRoutes.management.accountant.invoices) {
         return <Invoices />;
     }
+    if (page.path === appRoutes.management.accountant.fuel) return <RouteFuel />;
 
     if (page.path === appRoutes.management.accountant.reports) {
         return <FinancialReports />;

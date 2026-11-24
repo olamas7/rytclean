@@ -1,0 +1,21 @@
+import { formatCurrency, formatDate } from './formatters';
+import { paymentMethodLabel, paymentSourceLabel } from './paymentMethods';
+const escape = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+const money = (cents) => escape(formatCurrency(Number(cents) / 100));
+const printDocument = (title, content) => {
+    const popup = window.open('', '_blank', 'width=1000,height=750');
+    if (!popup) throw new Error('Allow popups for this site to print.');
+    popup.opener = null;
+    popup.document.write(`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${escape(title)}</title><style>body{font:13px/1.5 Arial,sans-serif;color:#192b60;padding:24px}h1{font-size:22px}table{border-collapse:collapse;width:100%;margin-top:20px}th,td{text-align:left;border-bottom:1px solid #ddd;padding:8px}th{background:#f3f6fc}.amount{text-align:right;white-space:nowrap}@page{margin:15mm}@media print{body{padding:0}tr{break-inside:avoid}}</style></head><body>${content}</body></html>`);
+    popup.document.close();
+    popup.focus();
+    popup.print();
+};
+export const printAccountStatement = (account) => {
+    const { customer, summary, statement } = account;
+    const balance = summary.balanceCents;
+    printDocument(`Statement - ${customer.id}`, `<h1>RytClean — Account Statement</h1><h2>${escape(customer.fullName)}</h2><p>Client ID: ${escape(customer.id)} · Phone: ${escape(customer.phone)}</p><p>Balance: <strong>${money(Math.abs(balance))} ${balance < 0 ? 'credit' : balance > 0 ? 'owing' : '(settled)'}</strong><br>Total billed: ${money(summary.totalBilledCents)} · Total paid: ${money(summary.totalPaidCents)}</p><table><thead><tr><th>Date</th><th>Entry</th><th class="amount">Debit</th><th class="amount">Credit</th><th class="amount">Balance</th></tr></thead><tbody>${statement.map((entry) => `<tr><td>${escape(formatDate(entry.date))}</td><td>${escape(entry.description)}${entry.reversed ? ' [reversed]' : ''}</td><td class="amount">${entry.debitCents ? money(entry.debitCents) : '—'}</td><td class="amount">${entry.creditCents ? money(entry.creditCents) : '—'}</td><td class="amount">${money(Math.abs(entry.balanceCents))}${entry.balanceCents < 0 ? ' CR' : ''}</td></tr>`).join('')}</tbody></table><p>Running balances follow posting order. Reversals remain visible for audit.</p>`);
+};
+export const printPaymentReceipt = (customer, entry) => printDocument(`Receipt ${entry.testPayment ? '' : 'RCPT-'}${entry.id}`, `<h1>RytClean — ${entry.testPayment ? 'TEST ONLY — NOT A PAYMENT RECEIPT' : 'Payment Receipt'}</h1><h2>${entry.testPayment ? '' : 'RCPT-'}${escape(entry.id)}${entry.reversed ? ' — REVERSED' : ''}</h2><p>${escape(customer.fullName)} · ${escape(customer.id)}</p><p>Date: ${escape(formatDate(entry.date))}<br>Amount: <strong>${money(entry.creditCents)}</strong><br>Method: ${escape(paymentMethodLabel(entry.method))}<br>Paid via / recorded by: ${escape(paymentSourceLabel(entry))}<br>Reference: ${escape(entry.reference || '—')}</p><p>${escape(entry.description)}</p><p>Alternative payment: dial <strong>*412*99#</strong> and follow the prompts. Keep your five-digit customer ID ready. USSD payments are not yet automatically reconciled in RytClean.</p>`);
+
+export const printSubscriptionBill = (customer, invoice) => printDocument(invoice.reference, `<h1>RytClean — Subscription Bill</h1><h2>${escape(invoice.reference)}${invoice.voided ? ' — VOIDED' : ''}</h2><p>${escape(customer.fullName)} · ${escape(customer.id)}</p><p>Issued: ${escape(formatDate(invoice.issuedOn))} · Due: ${escape(formatDate(invoice.dueOn))}</p><table><thead><tr><th>Plan / Service Period</th><th class="amount">Amount</th></tr></thead><tbody><tr><td>${escape(invoice.plan_name)}<br>${escape(formatDate(invoice.serviceStart))} – ${escape(formatDate(invoice.periodEnd))}${invoice.first_month_policy === 'prorated' ? `<br>Prorated: ${escape(invoice.service_days)} / ${escape(invoice.month_days)} days × ${money(invoice.rate_cents)}` : '<br>Full monthly charge'}</td><td class="amount">${money(invoice.amountCents)}</td></tr></tbody></table><p>Settled: ${money(invoice.settledCents)}<br>Outstanding: <strong>${money(invoice.outstandingCents)}</strong><br>Status: ${escape(invoice.status)}</p>`);

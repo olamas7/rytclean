@@ -18,28 +18,28 @@ const defaultValues = {
     routeGeoJson: null
 };
 
-const RouteForm = ({ zones, onSubmit, loading, onCancel, open }) => {
+const RouteForm = ({ zones, onSubmit, loading, onCancel, open, initialValues }) => {
     const methods = useForm({ defaultValues });
     const { handleSubmit, reset, control } = methods;
 
     useEffect(() => {
         if (open) {
-            reset(defaultValues);
+            reset(initialValues ? { routeCode: initialValues.route_code, routeName: initialValues.route_name, zoneId: initialValues.zone_id, startPoint: initialValues.start_point, endPoint: initialValues.end_point, estimatedDurationMins: initialValues.estimated_duration_mins, status: initialValues.status, notes: initialValues.notes || '', routeGeoJson: typeof initialValues.route_geojson === 'string' ? JSON.parse(initialValues.route_geojson) : initialValues.route_geojson } : defaultValues);
         }
-    }, [open, reset]);
+    }, [open, reset, initialValues]);
 
     return (
         <FormProvider {...methods}>
             <Stack component="form" spacing={1.25} onSubmit={handleSubmit(onSubmit)}>
                 <Grid container spacing={1.25}>
                     <Grid item xs={12} md={6}>
-                        <RHFTextField name="routeCode" label="Route Code" control={control} rules={{ required: 'Route code is required' }} />
+                        <RHFTextField name="routeCode" label="Route Code" control={control} InputProps={{ readOnly: Boolean(initialValues) }} rules={{ required: 'Route code is required' }} />
                     </Grid>
                     <Grid item xs={12} md={6}>
                         <RHFTextField name="routeName" label="Route Name" control={control} rules={{ required: 'Route name is required' }} />
                     </Grid>
                     <Grid item xs={12} md={6}>
-                        <RHFTextField name="zoneId" label="Zone" control={control} rules={{ required: 'Zone is required' }} select>
+                        <RHFTextField name="zoneId" label="Zone" control={control} rules={{ required: 'Zone is required' }} select disabled={Boolean(initialValues)}>
                             {zones.map((zone) => (
                                 <MenuItem key={zone.id} value={zone.id}>
                                     {zone.zone_code} - {zone.name}
@@ -101,7 +101,7 @@ const RouteForm = ({ zones, onSubmit, loading, onCancel, open }) => {
                 />
 
                 <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ mt: 0.5 }}>
-                    <LdButton variant="outlined" color="secondary" onClick={onCancel}>
+                    <LdButton variant="outlined" color="secondary" onClick={onCancel} disabled={loading}>
                         Cancel
                     </LdButton>
                     <LdButton type="submit" loading={loading}>
@@ -118,7 +118,8 @@ RouteForm.propTypes = {
     onSubmit: PropTypes.func.isRequired,
     loading: PropTypes.bool,
     onCancel: PropTypes.func.isRequired,
-    open: PropTypes.bool
+    open: PropTypes.bool,
+    initialValues: PropTypes.object
 };
 
 export default RouteForm;

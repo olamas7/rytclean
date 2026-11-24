@@ -1,34 +1,30 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { FormProvider, useForm } from 'react-hook-form';
 import { Grid, MenuItem, Stack } from '@mui/material';
 import { RHFTextField } from 'utils/controls/ReactHookForms';
 import { LdButton } from 'utils/myButtons';
 
-const defaultValues = {
-    fullname: '',
-    username: '',
-    password: '',
-    workTitle: 'driver',
-    status: 1,
-    driverCode: '',
-    phone: '',
-    vehicleNumber: '',
-    zoneId: '',
-    driverStatus: 'available'
-};
+const UserForm = ({ initialValues, mode, onSubmit, loading, onCancel, open }) => {
+    const defaultValues = useMemo(
+        () => ({
+            fullname: initialValues?.fullname || '',
+            username: initialValues?.username || '',
+            password: '',
+            workTitle: initialValues?.workTitle === 'supervisor' ? 'driver' : initialValues?.workTitle || 'driver',
+            status: initialValues?.status ?? 1
+        }),
+        [initialValues]
+    );
 
-const UserForm = ({ zones, onSubmit, loading, onCancel, open }) => {
     const methods = useForm({ defaultValues });
-    const { handleSubmit, reset, control, watch } = methods;
-
-    const workTitle = watch('workTitle');
+    const { handleSubmit, reset, control } = methods;
 
     useEffect(() => {
         if (open) {
             reset(defaultValues);
         }
-    }, [open, reset]);
+    }, [open, reset, defaultValues]);
 
     return (
         <FormProvider {...methods}>
@@ -40,14 +36,15 @@ const UserForm = ({ zones, onSubmit, loading, onCancel, open }) => {
                     <Grid item xs={12} md={6}>
                         <RHFTextField name="username" label="Username" control={control} rules={{ required: 'Username is required' }} />
                     </Grid>
-                    <Grid item xs={12} md={6}>
-                        <RHFTextField name="password" label="Password" type="password" control={control} rules={{ required: 'Password is required' }} />
-                    </Grid>
+                    {mode === 'create' && (
+                        <Grid item xs={12} md={6}>
+                            <RHFTextField name="password" label="Password" type="password" control={control} rules={{ required: 'Password is required' }} />
+                        </Grid>
+                    )}
                     <Grid item xs={12} md={6}>
                         <RHFTextField name="workTitle" label="Work Title" control={control} select rules={{ required: 'Work title is required' }}>
                             <MenuItem value="admin">Admin</MenuItem>
                             <MenuItem value="driver">Driver</MenuItem>
-                            <MenuItem value="supervisor">Supervisor</MenuItem>
                             <MenuItem value="accountant">Accountant</MenuItem>
                             <MenuItem value="support">Support</MenuItem>
                             <MenuItem value="other">Other</MenuItem>
@@ -59,59 +56,13 @@ const UserForm = ({ zones, onSubmit, loading, onCancel, open }) => {
                             <MenuItem value={0}>Inactive</MenuItem>
                         </RHFTextField>
                     </Grid>
-
-                    {workTitle === 'driver' && (
-                        <>
-                            <Grid item xs={12} md={6}>
-                                <RHFTextField
-                                    name="driverCode"
-                                    label="Driver Code"
-                                    control={control}
-                                    rules={{ required: 'Driver code is required for driver users' }}
-                                />
-                            </Grid>
-                            <Grid item xs={12} md={6}>
-                                <RHFTextField
-                                    name="phone"
-                                    label="Phone"
-                                    control={control}
-                                    rules={{ required: 'Phone is required for driver users' }}
-                                />
-                            </Grid>
-                            <Grid item xs={12} md={6}>
-                                <RHFTextField
-                                    name="vehicleNumber"
-                                    label="Vehicle Number"
-                                    control={control}
-                                    rules={{ required: 'Vehicle number is required for driver users' }}
-                                />
-                            </Grid>
-                            <Grid item xs={12} md={6}>
-                                <RHFTextField name="zoneId" label="Zone" control={control} select rules={{ required: 'Zone is required for driver users' }}>
-                                    {zones.map((zone) => (
-                                        <MenuItem key={zone.id} value={zone.id}>
-                                            {zone.zone_code} - {zone.name}
-                                        </MenuItem>
-                                    ))}
-                                </RHFTextField>
-                            </Grid>
-                            <Grid item xs={12} md={6}>
-                                <RHFTextField name="driverStatus" label="Driver Status" control={control} select>
-                                    <MenuItem value="available">Available</MenuItem>
-                                    <MenuItem value="on-route">On Route</MenuItem>
-                                    <MenuItem value="off-duty">Off Duty</MenuItem>
-                                    <MenuItem value="inactive">Inactive</MenuItem>
-                                </RHFTextField>
-                            </Grid>
-                        </>
-                    )}
                 </Grid>
                 <Stack direction="row" spacing={1} justifyContent="flex-end">
-                    <LdButton variant="outlined" color="secondary" onClick={onCancel}>
+                    <LdButton variant="outlined" color="secondary" onClick={onCancel} disabled={loading}>
                         Cancel
                     </LdButton>
                     <LdButton type="submit" loading={loading}>
-                        Save User
+                        {mode === 'edit' ? 'Update User' : 'Save User'}
                     </LdButton>
                 </Stack>
             </Stack>
@@ -120,7 +71,8 @@ const UserForm = ({ zones, onSubmit, loading, onCancel, open }) => {
 };
 
 UserForm.propTypes = {
-    zones: PropTypes.array.isRequired,
+    initialValues: PropTypes.object,
+    mode: PropTypes.oneOf(['create', 'edit']).isRequired,
     onSubmit: PropTypes.func.isRequired,
     loading: PropTypes.bool,
     onCancel: PropTypes.func.isRequired,

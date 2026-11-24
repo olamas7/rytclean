@@ -19,7 +19,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/en-gb';
 import dayjs from 'dayjs';
 
-const RHFTextField = ({ name, control, label, rules = {}, ...props }) => {
+const RHFTextField = ({ name, control, label, rules = {}, transformValue, ...props }) => {
   const {
     field: { onChange, onBlur, value, ref },
     fieldState: { error }
@@ -34,12 +34,13 @@ const RHFTextField = ({ name, control, label, rules = {}, ...props }) => {
     <TextField
       {...props}
       inputRef={ref}
+      name={name}
       label={label}
       value={value}
-      onChange={onChange}
+      onChange={(event) => onChange(transformValue ? transformValue(event.target.value) : event)}
       onBlur={onBlur}
       error={!!error}
-      helperText={error ? error.message : ''}
+      helperText={error ? error.message : props.helperText}
       fullWidth
       margin="normal"
       size="small"

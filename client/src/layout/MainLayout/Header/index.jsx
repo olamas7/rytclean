@@ -74,7 +74,7 @@ const Header = ({ handleLeftDrawerToggle }) => {
           {localStorage.getItem('userMName') || 'User'}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ fontSize: '10px' }}>
-          {localStorage.getItem('admin_role') || 'Member'}
+          {localStorage.getItem('admin_role') === 'Supervisor' ? 'Driver' : localStorage.getItem('admin_role') || 'Member'}
         </Typography>
       </Grid>
 

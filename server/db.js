@@ -7,6 +7,7 @@ const pool = mysql2.createPool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: DATABASE_NAME,
+  timezone: 'Z',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -34,8 +35,24 @@ async function logActivity(userId, action, details = null, ip = null) {
   }
 }
 
+async function withTransaction(work) {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const result = await work(connection);
+    await connection.commit();
+    return result;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
 module.exports = {
   DATABASE_NAME,
   runQuery,
   logActivity,
+  withTransaction,
 };

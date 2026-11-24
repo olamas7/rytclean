@@ -1,0 +1,26 @@
+{
+  "id": "kayfi-wifi-app",
+  "name": "KayFi Wifi Management",
+  "short_name": "KayFi",
+  "description": "A wifi management application for local networks.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#01286D",
+  "icons": [
+    {
+      "src": "/kiyfi192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/kayfilogo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -15,20 +15,20 @@ const defaultValues = {
     boundaryGeoJson: null
 };
 
-const ZoneForm = ({ onSubmit, loading, onCancel, open }) => {
+const ZoneForm = ({ onSubmit, loading, onCancel, open, initialValues }) => {
     const methods = useForm({ defaultValues });
     const { handleSubmit, reset, control } = methods;
 
     useEffect(() => {
         if (open) {
-            reset(defaultValues);
+            reset(initialValues ? { zoneCode: initialValues.zone_code, name: initialValues.name, city: initialValues.city, coverageArea: initialValues.coverage_area || '', status: initialValues.status, boundaryGeoJson: typeof initialValues.boundary_geojson === 'string' ? JSON.parse(initialValues.boundary_geojson) : initialValues.boundary_geojson } : defaultValues);
         }
-    }, [open, reset]);
+    }, [open, reset, initialValues]);
 
     return (
         <FormProvider {...methods}>
             <Stack component="form" spacing={1.25} onSubmit={handleSubmit(onSubmit)}>
-                <RHFTextField name="zoneCode" label="Zone Code" control={control} rules={{ required: 'Zone code is required' }} />
+                <RHFTextField name="zoneCode" label="Zone Code" control={control} InputProps={{ readOnly: Boolean(initialValues) }} rules={{ required: 'Zone code is required' }} />
                 <RHFTextField name="name" label="Zone Name" control={control} rules={{ required: 'Zone name is required' }} />
                 <RHFTextField name="city" label="City" control={control} rules={{ required: 'City is required' }} />
                 <RHFTextField name="coverageArea" label="Coverage Area" control={control} />
@@ -63,7 +63,7 @@ const ZoneForm = ({ onSubmit, loading, onCancel, open }) => {
                     )}
                 />
                 <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ mt: 0.5 }}>
-                    <LdButton variant="outlined" color="secondary" onClick={onCancel}>
+                    <LdButton variant="outlined" color="secondary" onClick={onCancel} disabled={loading}>
                         Cancel
                     </LdButton>
                     <LdButton type="submit" loading={loading}>
@@ -79,7 +79,8 @@ ZoneForm.propTypes = {
     onSubmit: PropTypes.func.isRequired,
     loading: PropTypes.bool,
     onCancel: PropTypes.func.isRequired,
-    open: PropTypes.bool
+    open: PropTypes.bool,
+    initialValues: PropTypes.object
 };
 
 export default ZoneForm;

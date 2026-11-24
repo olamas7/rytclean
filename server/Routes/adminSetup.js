@@ -4,6 +4,30 @@ const { runQuery } = require("../db");
 const verifyJWT = require("../middleware/verifyJWT");
 
 router.use(verifyJWT);
+router.use(require("./customers"));
+router.use(require("./clientCategories"));
+router.use(require("./plans"));
+router.use(require("./billingSettings"));
+router.use(require("./smsSettings"));
+router.use((req, res, next) => {
+  if (
+    req.method !== "GET" &&
+    /^\/(zones|routes|drivers|assignments)(\/|$)/.test(req.path) &&
+    !["Admin", "Super Admin", "Manager"].includes(req.user?.role)
+  )
+    return res
+      .status(403)
+      .json({ code: 2, message: "Manager access is required." });
+  if (
+    req.method !== "GET" &&
+    /^\/users(\/|$)/.test(req.path) &&
+    !["Admin", "Super Admin"].includes(req.user?.role)
+  )
+    return res
+      .status(403)
+      .json({ code: 2, message: "Administrator access is required." });
+  next();
+});
 
 const VALID_WORK_TITLES = [
   "admin",
@@ -25,13 +49,29 @@ const ROLE_BY_WORK_TITLE = {
 
 router.get("/users", async (req, res) => {
   const workTitle = String(req.query.workTitle || "").toLowerCase();
+  const withoutDriver = String(req.query.withoutDriver || "") === "1";
 
   if (workTitle && !VALID_WORK_TITLES.includes(workTitle)) {
     return res.json({ code: 2, message: "Invalid work title filter." });
   }
 
-  const where = workTitle ? "WHERE u.work_title = ?" : "";
-  const params = workTitle ? [workTitle] : [];
+  const whereParts = [];
+  const params = [];
+
+  if (workTitle) {
+    if (workTitle === "driver")
+      whereParts.push("u.work_title IN ('driver','supervisor')");
+    else {
+      whereParts.push("u.work_title = ?");
+      params.push(workTitle);
+    }
+  }
+
+  if (withoutDriver) {
+    whereParts.push("d.id IS NULL");
+  }
+
+  const where = whereParts.length ? `WHERE ${whereParts.join(" AND ")}` : "";
 
   const [err, rows] = await runQuery(
     `
@@ -68,20 +108,12 @@ router.get("/users", async (req, res) => {
 });
 
 router.post("/users", async (req, res) => {
-  const {
-    fullname,
-    username,
-    password,
-    workTitle,
-    status = 1,
-    driverCode,
-    phone,
-    vehicleNumber,
-    zoneId,
-    driverStatus = "available",
-  } = req.body;
+  const { fullname, username, password, workTitle, status = 1 } = req.body;
 
-  const normalizedWorkTitle = String(workTitle || "").toLowerCase();
+  const normalizedWorkTitle =
+    String(workTitle || "").toLowerCase() === "supervisor"
+      ? "driver"
+      : String(workTitle || "").toLowerCase();
   const normalizedStatus = Number(status) ? 1 : 0;
 
   if (!fullname || !username || !password || !normalizedWorkTitle) {
@@ -93,29 +125,6 @@ router.post("/users", async (req, res) => {
 
   if (!VALID_WORK_TITLES.includes(normalizedWorkTitle)) {
     return res.json({ code: 2, message: "Invalid work title selected." });
-  }
-
-  if (
-    normalizedWorkTitle === "driver" &&
-    (!driverCode || !phone || !vehicleNumber || !zoneId)
-  ) {
-    return res.json({
-      code: 2,
-      message:
-        "Driver code, phone, vehicle number, and zone are required for driver users.",
-    });
-  }
-
-  if (
-    normalizedWorkTitle === "driver" &&
-    !["available", "on-route", "off-duty", "inactive"].includes(
-      String(driverStatus).toLowerCase(),
-    )
-  ) {
-    return res.json({
-      code: 2,
-      message: "Driver status must be available, on-route, off-duty, or inactive.",
-    });
   }
 
   const [insertUserErr, userResult] = await runQuery(
@@ -140,54 +149,97 @@ router.post("/users", async (req, res) => {
     return res.status(500).json({ code: 2, message: "Unable to create user." });
   }
 
-  const userId = userResult.insertId;
+  return res.json({
+    code: 1,
+    data: { id: userResult.insertId },
+    message: "User created successfully.",
+  });
+});
 
-  if (normalizedWorkTitle === "driver") {
-    const [zoneErr, zoneRows] = await runQuery("SELECT id FROM zones WHERE id = ?", [
-      zoneId,
-    ]);
-    if (zoneErr) {
-      await runQuery("DELETE FROM users WHERE id = ?", [userId]);
-      return res
-        .status(500)
-        .json({ code: 2, message: "Unable to validate driver zone." });
-    }
-    if (!zoneRows.length) {
-      await runQuery("DELETE FROM users WHERE id = ?", [userId]);
-      return res.json({ code: 2, message: "Selected driver zone does not exist." });
-    }
+router.patch("/users/:id", async (req, res) => {
+  const userId = Number(req.params.id);
+  const { fullname, username, workTitle, status } = req.body;
+  const normalizedWorkTitle =
+    String(workTitle || "").toLowerCase() === "supervisor"
+      ? "driver"
+      : String(workTitle || "").toLowerCase();
+  const normalizedStatus = Number(status) ? 1 : 0;
 
-    const [insertDriverErr] = await runQuery(
-      `
-        INSERT INTO drivers (user_id, driver_code, full_name, phone, vehicle_number, zone_id, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `,
-      [
-        userId,
-        driverCode.trim(),
-        fullname.trim(),
-        phone.trim(),
-        vehicleNumber.trim(),
-        Number(zoneId),
-        String(driverStatus).toLowerCase(),
-      ],
-    );
+  if (!userId) {
+    return res.json({ code: 2, message: "Invalid user selected." });
+  }
 
-    if (insertDriverErr) {
-      await runQuery("DELETE FROM users WHERE id = ?", [userId]);
-      if (insertDriverErr.code === "ER_DUP_ENTRY") {
-        return res.json({ code: 2, message: "Driver code already exists." });
-      }
-      return res
-        .status(500)
-        .json({ code: 2, message: "Unable to create driver profile." });
+  if (!fullname || !username || !normalizedWorkTitle) {
+    return res.json({
+      code: 2,
+      message: "Full name, username, and work title are required.",
+    });
+  }
+
+  if (!VALID_WORK_TITLES.includes(normalizedWorkTitle)) {
+    return res.json({ code: 2, message: "Invalid work title selected." });
+  }
+
+  const [existingErr, existingRows] = await runQuery(
+    `
+      SELECT u.id, u.work_title, d.id AS driverProfileId
+      FROM users u
+      LEFT JOIN drivers d ON d.user_id = u.id
+      WHERE u.id = ?
+      LIMIT 1
+    `,
+    [userId],
+  );
+
+  if (existingErr) {
+    return res
+      .status(500)
+      .json({ code: 2, message: "Unable to validate user." });
+  }
+  if (!existingRows.length) {
+    return res.json({ code: 2, message: "Selected user does not exist." });
+  }
+
+  const existing = existingRows[0];
+  if (
+    existing.driverProfileId &&
+    ["driver", "supervisor"].includes(existing.work_title) &&
+    normalizedWorkTitle !== "driver"
+  ) {
+    return res.json({
+      code: 2,
+      message:
+        "This user has a driver profile. Update/remove driver profile before changing work title.",
+    });
+  }
+
+  const [updateErr] = await runQuery(
+    `
+      UPDATE users
+      SET fullname = ?, username = ?, role = ?, work_title = ?, status = ?
+      WHERE id = ?
+    `,
+    [
+      fullname.trim(),
+      username.trim(),
+      ROLE_BY_WORK_TITLE[normalizedWorkTitle],
+      normalizedWorkTitle,
+      normalizedStatus,
+      userId,
+    ],
+  );
+
+  if (updateErr) {
+    if (updateErr.code === "ER_DUP_ENTRY") {
+      return res.json({ code: 2, message: "Username already exists." });
     }
+    return res.status(500).json({ code: 2, message: "Unable to update user." });
   }
 
   return res.json({
     code: 1,
-    data: { id: userId },
-    message: "User created successfully.",
+    data: null,
+    message: "User updated successfully.",
   });
 });
 
@@ -465,23 +517,149 @@ router.get("/drivers", async (req, res) => {
       FROM drivers d
       JOIN users u ON u.id = d.user_id
       LEFT JOIN zones z ON z.id = d.zone_id
-      WHERE u.work_title = 'driver'
+      WHERE u.work_title IN ('driver','supervisor')
       ORDER BY d.created_at DESC
     `,
   );
 
   if (err) {
-    return res.status(500).json({ code: 2, message: "Unable to load drivers." });
+    return res
+      .status(500)
+      .json({ code: 2, message: "Unable to load drivers." });
   }
 
   return res.json({ code: 1, data: rows, message: "Drivers loaded." });
 });
 
 router.post("/drivers", async (req, res) => {
+  const {
+    userId,
+    driverCode,
+    phone,
+    vehicleNumber = "",
+    zoneId,
+    status = "available",
+  } = req.body;
+
+  if (!userId || !driverCode || !phone || !zoneId) {
+    return res.json({
+      code: 2,
+      message:
+        "Driver user, driver code, phone, and zone are required. Vehicles are assigned per route.",
+    });
+  }
+
+  if (
+    !/^\d{10}$/.test(String(phone)) ||
+    !/^[A-Za-z0-9_-]{1,40}$/.test(String(driverCode))
+  )
+    return res
+      .status(400)
+      .json({
+        code: 2,
+        message:
+          "Use a ten-digit phone and driver code of up to 40 letters, numbers, hyphens or underscores.",
+      });
+
+  if (
+    !["available", "on-route", "off-duty", "inactive"].includes(
+      String(status).toLowerCase(),
+    )
+  ) {
+    return res.json({
+      code: 2,
+      message:
+        "Driver status must be available, on-route, off-duty, or inactive.",
+    });
+  }
+
+  const [userErr, userRows] = await runQuery(
+    `
+      SELECT id, fullname, work_title, status
+      FROM users
+      WHERE id = ?
+      LIMIT 1
+    `,
+    [userId],
+  );
+  if (userErr) {
+    return res
+      .status(500)
+      .json({ code: 2, message: "Unable to validate driver user." });
+  }
+  if (!userRows.length) {
+    return res.json({ code: 2, message: "Selected user does not exist." });
+  }
+
+  const user = userRows[0];
+  if (!["driver", "supervisor"].includes(user.work_title)) {
+    return res.json({
+      code: 2,
+      message: "Selected user is not a driver user.",
+    });
+  }
+  if (Number(user.status) !== 1) {
+    return res.json({ code: 2, message: "Selected user is inactive." });
+  }
+
+  const [existingDriverErr, existingDriverRows] = await runQuery(
+    "SELECT id FROM drivers WHERE user_id = ? LIMIT 1",
+    [userId],
+  );
+  if (existingDriverErr) {
+    return res
+      .status(500)
+      .json({ code: 2, message: "Unable to validate driver profile." });
+  }
+  if (existingDriverRows.length) {
+    return res.json({
+      code: 2,
+      message: "Selected user already has a driver profile.",
+    });
+  }
+
+  const [zoneErr, zoneRows] = await runQuery(
+    "SELECT id FROM zones WHERE id = ?",
+    [zoneId],
+  );
+  if (zoneErr) {
+    return res
+      .status(500)
+      .json({ code: 2, message: "Unable to validate zone." });
+  }
+  if (!zoneRows.length) {
+    return res.json({ code: 2, message: "Selected zone does not exist." });
+  }
+
+  const [insertErr] = await runQuery(
+    `
+      INSERT INTO drivers (user_id, driver_code, full_name, phone, vehicle_number, zone_id, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `,
+    [
+      Number(userId),
+      driverCode.trim(),
+      user.fullname,
+      phone.trim(),
+      vehicleNumber.trim(),
+      Number(zoneId),
+      String(status).toLowerCase(),
+    ],
+  );
+
+  if (insertErr) {
+    if (insertErr.code === "ER_DUP_ENTRY") {
+      return res.json({ code: 2, message: "Driver code already exists." });
+    }
+    return res
+      .status(500)
+      .json({ code: 2, message: "Unable to create driver." });
+  }
+
   return res.json({
-    code: 2,
-    message:
-      "Driver creation moved to User Manager. Create a user with work title as driver.",
+    code: 1,
+    data: null,
+    message: "Driver created successfully.",
   });
 });
 
@@ -513,7 +691,9 @@ router.get("/pickups", async (req, res) => {
   );
 
   if (err) {
-    return res.status(500).json({ code: 2, message: "Unable to load pickups." });
+    return res
+      .status(500)
+      .json({ code: 2, message: "Unable to load pickups." });
   }
 
   return res.json({ code: 1, data: rows, message: "Pickups loaded." });

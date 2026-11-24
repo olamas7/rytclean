@@ -19,7 +19,14 @@ const STATUS_TONE_MAP = {
     rejected: 'error',
     missed: 'error',
     inactive: 'neutral',
-    'off-duty': 'neutral'
+    'off-duty': 'neutral',
+    'needs review': 'warning',
+    paused: 'neutral',
+    unpaid: 'warning',
+    'partially paid': 'warning',
+    overdue: 'error',
+    voided: 'neutral',
+    reversed: 'neutral'
 };
 
 const StatusBadge = ({ label, size = 'small' }) => {
@@ -42,14 +49,19 @@ const StatusBadge = ({ label, size = 'small' }) => {
     return (
         <Chip
             label={label}
+            icon={<span aria-hidden="true" style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: 'currentColor' }} />}
             size={size}
             sx={{
                 textTransform: 'capitalize',
                 fontWeight: 600,
+                height: size === 'small' ? 23 : 28,
+                fontSize: size === 'small' ? '0.625rem' : '0.75rem',
+                borderRadius: '999px',
                 backgroundColor: palette.bg,
                 color: palette.color,
-                border: '1px solid',
-                borderColor: palette.border
+                border: 0,
+                '& .MuiChip-icon': { color: 'inherit', ml: 1, mr: 0 },
+                '& .MuiChip-label': { pl: 0.75, pr: 1 }
             }}
         />
     );

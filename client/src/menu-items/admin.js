@@ -9,7 +9,6 @@ import {
     AdminPanelSettings,
     Engineering,
     AccountBalanceWallet,
-    SupervisorAccount,
     People,
     AssignmentTurnedIn,
     Route,
@@ -17,7 +16,10 @@ import {
     Insights,
     ReceiptLong,
     MonitorHeart,
-    ManageAccounts
+    ManageAccounts,
+    Settings,
+    BusinessCenter,
+    Sms
 } from '@mui/icons-material';
 import { appRoutes } from 'constants/appRoutes';
 
@@ -98,34 +100,34 @@ const managementPortal = {
     type: 'group',
     children: [
         {
-            id: 'management-admin',
-            title: 'Admin',
+            id: 'management-manager',
+            title: 'Manager',
             type: 'collapse',
-            icon: AdminPanelSettings,
+            icon: BusinessCenter,
             color: '#1e88e5',
             children: [
-                {
-                    id: 'admin-dashboard',
-                    title: 'Dashboard',
-                    type: 'item',
-                    url: appRoutes.management.admin.dashboard,
-                    icon: Dashboard,
-                    breadcrumbs: false
-                },
-                {
-                    id: 'admin-users',
-                    title: 'User Manager',
-                    type: 'item',
-                    url: appRoutes.management.admin.users,
-                    icon: ManageAccounts,
-                    breadcrumbs: false
-                },
                 {
                     id: 'admin-customers',
                     title: 'Customer Management',
                     type: 'item',
                     url: appRoutes.management.admin.customers,
                     icon: People,
+                    breadcrumbs: false
+                },
+                {
+                    id: 'manager-billing',
+                    title: 'Client Billing',
+                    type: 'item',
+                    url: appRoutes.management.admin.billing,
+                    icon: AccountBalanceWallet,
+                    breadcrumbs: false
+                },
+                {
+                    id: 'manager-sms',
+                    title: 'SMS Notifications',
+                    type: 'item',
+                    url: appRoutes.management.admin.sms,
+                    icon: Sms,
                     breadcrumbs: false
                 },
                 {
@@ -166,6 +168,14 @@ const managementPortal = {
                     type: 'item',
                     url: appRoutes.management.admin.reports,
                     icon: Insights,
+                    breadcrumbs: false
+                },
+                {
+                    id: 'admin-settings',
+                    title: 'Settings',
+                    type: 'item',
+                    url: appRoutes.management.admin.settings,
+                    icon: AdminPanelSettings,
                     breadcrumbs: false
                 }
             ]
@@ -208,6 +218,22 @@ const managementPortal = {
                     url: appRoutes.management.driver.route,
                     icon: Route,
                     breadcrumbs: false
+                },
+                {
+                    id: 'driver-monitoring',
+                    title: 'Monitoring',
+                    type: 'item',
+                    url: appRoutes.management.supervisor.monitoring,
+                    icon: MonitorHeart,
+                    breadcrumbs: false
+                },
+                {
+                    id: 'driver-oversight',
+                    title: 'Pickup Oversight',
+                    type: 'item',
+                    url: appRoutes.management.supervisor.oversight,
+                    icon: AssignmentTurnedIn,
+                    breadcrumbs: false
                 }
             ]
         },
@@ -240,6 +266,14 @@ const managementPortal = {
                     type: 'item',
                     url: appRoutes.management.accountant.invoices,
                     icon: ReceiptLong,
+                    breadcrumbs: false
+                },
+                {
+                    id: 'accountant-fuel',
+                    title: 'Fuel & Cheques',
+                    type: 'item',
+                    url: appRoutes.management.accountant.fuel,
+                    icon: Payments,
                     breadcrumbs: false
                 },
                 {
@@ -284,41 +318,32 @@ const managementPortal = {
                     breadcrumbs: false
                 }
             ]
-        },
-        {
-            id: 'management-supervisor',
-            title: 'Supervisor',
-            type: 'collapse',
-            icon: SupervisorAccount,
-            color: '#6a1b9a',
-            children: [
-                {
-                    id: 'supervisor-dashboard',
-                    title: 'Dashboard',
-                    type: 'item',
-                    url: appRoutes.management.supervisor.dashboard,
-                    icon: Dashboard,
-                    breadcrumbs: false
-                },
-                {
-                    id: 'supervisor-monitoring',
-                    title: 'Driver Monitoring',
-                    type: 'item',
-                    url: appRoutes.management.supervisor.monitoring,
-                    icon: MonitorHeart,
-                    breadcrumbs: false
-                },
-                {
-                    id: 'supervisor-oversight',
-                    title: 'Pickup Oversight',
-                    type: 'item',
-                    url: appRoutes.management.supervisor.oversight,
-                    icon: AssignmentTurnedIn,
-                    breadcrumbs: false
-                }
-            ]
         }
     ]
 };
 
-export const appMenuGroups = [customerPortal, managementPortal];
+const adminPortal = {
+    id: 'admin-portal-group',
+    title: 'Admin',
+    type: 'group',
+    children: [
+        {
+            id: 'admin-users',
+            title: 'User Manager',
+            type: 'item',
+            url: appRoutes.management.admin.users,
+            icon: ManageAccounts,
+            breadcrumbs: false
+        },
+        {
+            id: 'admin-configuration',
+            title: 'Configuration',
+            type: 'item',
+            url: appRoutes.admin.configuration,
+            icon: Settings,
+            breadcrumbs: false
+        }
+    ]
+};
+
+export const appMenuGroups = [customerPortal, managementPortal, adminPortal];

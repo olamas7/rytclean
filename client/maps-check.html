@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RytClean — Google Maps check</title>
+    <style>
+      body { margin: 0; padding: 24px; background: #f3f6fc; color: #192b60; font: 15px/1.5 system-ui, sans-serif; }
+      main { max-width: 1000px; margin: auto; }
+      h1 { font-size: 22px; }
+      #status { padding: 16px; margin-bottom: 16px; border: 1px solid #cdd7e7; border-radius: 12px; background: white; }
+      #map { height: 60vh; min-height: 320px; border-radius: 16px; overflow: hidden; }
+      .note { color: #596a85; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Google Maps connection check</h1>
+      <p class="note">Development-only check. Existing application maps are unchanged. This loads one Google map and may count toward your usage.</p>
+      <div id="status" role="status" aria-live="polite">Checking configuration…</div>
+      <div id="map" aria-label="Google map centred on Accra"></div>
+      <p class="note">Confirm that Accra's roads and place labels are visible—not an error overlay. This check does not test Places searches or routing.</p>
+    </main>
+    <script type="module">
+      const status = document.getElementById('status');
+      const show = (message) => { status.textContent = message; };
+      const key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY?.trim();
+      const mapId = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID?.trim();
+      let authFailed = false;
+      window.gm_authFailure = () => {
+        authFailed = true;
+        show('Google rejected the map request. Check billing, Maps JavaScript API enablement, and website/API key restrictions. The browser console contains Google’s specific error code; do not share the key.');
+      };
+
+      if (!import.meta.env.DEV) {
+        show('This diagnostic page is available only on the development server.');
+      } else if (!key || !mapId) {
+        show('Missing API key or map ID in client/.env. Save the settings and restart the client dev server.');
+      } else {
+        show('Configuration found. Loading Google Maps…');
+        const timeout = window.setTimeout(() => {
+          if (!authFailed) show('Map loading is taking longer than expected. Check your internet connection, browser console and Google Cloud settings.');
+        }, 20000);
+        window.rytCleanMapsCheck = async () => {
+          try {
+            const { Map } = await google.maps.importLibrary('maps');
+            const map = new Map(document.getElementById('map'), {
+              center: { lat: 5.6037, lng: -0.187 }, zoom: 13, mapId,
+              streetViewControl: false, mapTypeControl: false
+            });
+            google.maps.event.addListenerOnce(map, 'tilesloaded', () => {
+              window.clearTimeout(timeout);
+              if (!authFailed) show(map.getMapCapabilities().isAdvancedMarkersAvailable
+                ? 'Map tiles loaded and advanced markers are available for this map ID. Confirm Accra’s roads and labels are visible without an error overlay.'
+                : 'Map tiles loaded, but advanced markers are unavailable. Confirm the map is visible and check the console for map ID warnings.');
+            });
+            const checkCapabilities = () => {
+              if (map.getMapCapabilities().isAdvancedMarkersAvailable && !authFailed) {
+                window.clearTimeout(timeout);
+                show('Google Maps initialised and advanced markers are available for this map ID. Confirm the map below displays Accra normally.');
+              }
+            };
+            map.addListener('mapcapabilities_changed', checkCapabilities);
+            checkCapabilities();
+          } catch {
+            window.clearTimeout(timeout);
+            if (!authFailed) show('Unable to initialise the map. Check that the map ID is a JavaScript map ID and inspect the browser console for Google’s error code.');
+          }
+        };
+        const url = new URL('https://maps.googleapis.com/maps/api/js');
+        url.search = new URLSearchParams({ key, loading: 'async', v: 'weekly', callback: 'rytCleanMapsCheck' }).toString();
+        const script = document.createElement('script');
+        script.src = url.toString();
+        script.async = true;
+        script.onerror = () => {
+          window.clearTimeout(timeout);
+          show('Unable to download Google Maps. Check the connection or browser content-blocking extensions.');
+        };
+        document.head.appendChild(script);
+      }
+    </script>
+  </body>
+</html>

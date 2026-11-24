@@ -1,4 +1,7 @@
 export const appRoutes = {
+    admin: {
+        configuration: '/admin/configuration'
+    },
     customer: {
         dashboard: '/customer/dashboard',
         subscription: '/customer/subscription',
@@ -11,8 +14,11 @@ export const appRoutes = {
     management: {
         admin: {
             dashboard: '/management/admin/dashboard',
+            settings: '/management/admin/settings',
             users: '/management/admin/users',
             customers: '/management/admin/customers',
+            billing: '/management/manager/billing',
+            sms: '/management/manager/sms-notifications',
             pickups: '/management/admin/pickups',
             assignments: '/management/admin/assignments',
             routes: '/management/admin/routes',
@@ -29,6 +35,7 @@ export const appRoutes = {
             dashboard: '/management/accountant/dashboard',
             payments: '/management/accountant/payments',
             invoices: '/management/accountant/invoices',
+            fuel: '/management/accountant/route-fuel',
             reports: '/management/accountant/reports'
         },
         support: {

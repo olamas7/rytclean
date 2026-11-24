@@ -1,0 +1,13 @@
+import Axios from 'axios';
+const config = () => ({ headers: { 'x-access-token': localStorage.getItem('token') || '' } });
+const root = '/api/billing';
+export const getBillingAccounts = async () => (await Axios.get(`${root}/accounts`, config())).data;
+export const getBillingInvoices = async () => (await Axios.get(`${root}/invoices`, config())).data;
+export const getBillingPayments = async () => (await Axios.get(`${root}/payments`, config())).data;
+export const getGatewayPayments = async () => (await Axios.get(`${root}/gateway-payments`, config())).data;
+export const verifyGatewayPayment = async (id) => (await Axios.post(`${root}/gateway-payments/${encodeURIComponent(id)}/verify`, {}, config())).data;
+export const getCustomerAccount = async (id) => (await Axios.get(`${root}/customers/${encodeURIComponent(id)}/account`, config())).data;
+export const activateCustomerBilling = async (id, serviceStart) => (await Axios.post(`${root}/customers/${encodeURIComponent(id)}/activate`, { serviceStart }, config())).data;
+export const postAccountEntry = async (id, payload) => (await Axios.post(`${root}/customers/${encodeURIComponent(id)}/entries`, payload, config())).data;
+export const generateDueBills = async (customerId) => (await Axios.post(`${root}/run`, { customerId }, config())).data;
+export const newRequestKey = () => crypto.randomUUID?.() || Array.from(crypto.getRandomValues(new Uint8Array(16)), (byte) => byte.toString(16).padStart(2, '0')).join('');

@@ -1,5 +1,14 @@
 require('dotenv').config();
 const mysql = require('mysql2/promise');
+const migrateCustomerDetails = require('./migrations/customerDetails');
+const migrateCustomerHousePhoto = require('./migrations/customerHousePhoto');
+const migrateSubscriptionPricing = require('./migrations/subscriptionPricing');
+const migrateBillingAccounts = require('./migrations/billingAccounts');
+const migrateSmsNotifications = require('./migrations/smsNotifications');
+const migrateSmsCampaigns = require('./migrations/smsCampaigns');
+const migrateFleetOperations = require('./migrations/fleetOperations');
+const migrateFuelRegister = require('./migrations/fuelRegister');
+const migrateCustomerPayments = require('./migrations/customerPayments');
 
 const {
   DB_HOST,
@@ -75,6 +84,47 @@ async function setupDatabase() {
     await connection.query('ALTER TABLE zones ADD COLUMN IF NOT EXISTS boundary_geojson JSON NULL');
     await connection.query('ALTER TABLE zones ADD COLUMN IF NOT EXISTS center_lat DECIMAL(10, 7) NULL');
     await connection.query('ALTER TABLE zones ADD COLUMN IF NOT EXISTS center_lng DECIMAL(10, 7) NULL');
+
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS plans (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        plan_code VARCHAR(60) NOT NULL UNIQUE,
+        name VARCHAR(150) NOT NULL,
+        billing_cycle ENUM('monthly', 'quarterly', 'yearly') NOT NULL DEFAULT 'monthly',
+        amount DECIMAL(10, 2) NOT NULL DEFAULT 0,
+        pickup_frequency INT NOT NULL DEFAULT 1,
+        grace_days INT NOT NULL DEFAULT 0,
+        status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      );
+    `);
+
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS customers (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        customer_code VARCHAR(40) NOT NULL UNIQUE,
+        full_name VARCHAR(150) NOT NULL,
+        phone VARCHAR(40) NOT NULL,
+        email VARCHAR(150) NOT NULL,
+        address VARCHAR(255) NULL,
+        zone_code VARCHAR(40) NOT NULL,
+        plan_code VARCHAR(60) NOT NULL,
+        latitude DECIMAL(10, 7) NULL,
+        longitude DECIMAL(10, 7) NULL,
+        location_address VARCHAR(255) NULL,
+        status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
+        next_pickup_date DATE NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      );
+    `);
+
+    await connection.query('ALTER TABLE customers ADD COLUMN IF NOT EXISTS latitude DECIMAL(10, 7) NULL');
+    await connection.query('ALTER TABLE customers ADD COLUMN IF NOT EXISTS longitude DECIMAL(10, 7) NULL');
+    await connection.query('ALTER TABLE customers ADD COLUMN IF NOT EXISTS location_address VARCHAR(255) NULL');
+    await migrateCustomerDetails(connection);
+    await migrateCustomerHousePhoto(connection);
 
     await connection.query(`
       CREATE TABLE IF NOT EXISTS collection_routes (
@@ -226,6 +276,17 @@ async function setupDatabase() {
 
     await connection.query(
       `
+        INSERT INTO users (fullname, username, password, role, work_title, status)
+        SELECT ?, ?, ?, ?, ?, ?
+        WHERE NOT EXISTS (
+          SELECT 1 FROM users WHERE username = ?
+        );
+      `,
+      ['New Driver User', 'driver003', 'driver123', 'Driver', 'driver', 1, 'driver003'],
+    );
+
+    await connection.query(
+      `
         INSERT INTO zones (zone_code, name, city, coverage_area, status)
         SELECT ?, ?, ?, ?, ?
         WHERE NOT EXISTS (
@@ -286,6 +347,94 @@ async function setupDatabase() {
         -0.212,
         'ZONE-AC-02',
       ],
+    );
+
+    await connection.query(
+      `
+        INSERT INTO plans (plan_code, name, billing_cycle, amount, pickup_frequency, grace_days, status)
+        SELECT ?, ?, ?, ?, ?, ?, ?
+        WHERE NOT EXISTS (
+          SELECT 1 FROM plans WHERE plan_code = ?
+        );
+      `,
+      ['HOME-BASIC', 'Home Basic', 'monthly', 120, 1, 7, 'active', 'HOME-BASIC'],
+    );
+
+    await connection.query(
+      `
+        INSERT INTO plans (plan_code, name, billing_cycle, amount, pickup_frequency, grace_days, status)
+        SELECT ?, ?, ?, ?, ?, ?, ?
+        WHERE NOT EXISTS (
+          SELECT 1 FROM plans WHERE plan_code = ?
+        );
+      `,
+      ['HOME-PLUS', 'Home Plus', 'monthly', 220, 2, 10, 'active', 'HOME-PLUS'],
+    );
+
+    await connection.query(
+      `
+        INSERT INTO plans (plan_code, name, billing_cycle, amount, pickup_frequency, grace_days, status)
+        SELECT ?, ?, ?, ?, ?, ?, ?
+        WHERE NOT EXISTS (
+          SELECT 1 FROM plans WHERE plan_code = ?
+        );
+      `,
+      ['BIZ-PRO', 'Business Pro', 'monthly', 520, 4, 14, 'inactive', 'BIZ-PRO'],
+    );
+
+    await connection.query(
+      `
+        INSERT INTO customers (customer_code, full_name, phone, email, address, zone_code, plan_code, status, next_pickup_date)
+        SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?
+        WHERE NOT EXISTS (
+          SELECT 1 FROM customers WHERE customer_code = ?
+        );
+      `,
+      ['CUST-001', 'Ama Boateng', '+233-24-110-2201', 'ama.boateng@example.com', '14 Palm Street, East Legon, Accra', 'ZONE-AC-01', 'PLAN-WEEKLY', 'active', '2026-04-24', 'CUST-001'],
+    );
+
+    await connection.query(
+      `
+        INSERT INTO customers (customer_code, full_name, phone, email, address, zone_code, plan_code, status, next_pickup_date)
+        SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?
+        WHERE NOT EXISTS (
+          SELECT 1 FROM customers WHERE customer_code = ?
+        );
+      `,
+      ['CUST-002', 'Kwesi Mensah', '+233-54-443-1010', 'kwesi.mensah@example.com', '6 Ring Road Central, Accra', 'ZONE-AC-02', 'PLAN-BIWEEKLY', 'active', '2026-04-27', 'CUST-002'],
+    );
+
+    await connection.query(
+      `
+        INSERT INTO customers (customer_code, full_name, phone, email, address, zone_code, plan_code, status, next_pickup_date)
+        SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?
+        WHERE NOT EXISTS (
+          SELECT 1 FROM customers WHERE customer_code = ?
+        );
+      `,
+      ['CUST-003', 'Kojo Asare', '+233-27-900-8842', 'kojo.asare@example.com', '22 Liberation Road, Tema', 'ZONE-TM-01', 'PLAN-BUSINESS', 'active', '2026-04-23', 'CUST-003'],
+    );
+
+    await connection.query(
+      `
+        INSERT INTO customers (customer_code, full_name, phone, email, address, zone_code, plan_code, status, next_pickup_date)
+        SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?
+        WHERE NOT EXISTS (
+          SELECT 1 FROM customers WHERE customer_code = ?
+        );
+      `,
+      ['CUST-004', 'Nana Ofori', '+233-20-113-7761', 'nana.ofori@example.com', '88 Oxford Street, Osu', 'ZONE-AC-01', 'PLAN-ONETIME', 'inactive', null, 'CUST-004'],
+    );
+
+    await connection.query(
+      `
+        INSERT INTO customers (customer_code, full_name, phone, email, address, zone_code, plan_code, status, next_pickup_date)
+        SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?
+        WHERE NOT EXISTS (
+          SELECT 1 FROM customers WHERE customer_code = ?
+        );
+      `,
+      ['CUST-005', 'Esi Lamptey', '+233-55-410-9934', 'esi.lamptey@example.com', '17 Spintex Road, Accra', 'ZONE-AC-03', 'PLAN-WEEKLY', 'active', '2026-04-25', 'CUST-005'],
     );
 
     await connection.query(
@@ -440,8 +589,15 @@ async function setupDatabase() {
       `,
     );
 
+    await migrateSubscriptionPricing(connection);
+    await migrateBillingAccounts(connection);
+    await migrateSmsNotifications(connection);
+    await migrateSmsCampaigns(connection);
+    await migrateFleetOperations(connection);
+    await migrateFuelRegister(connection);
+    await migrateCustomerPayments(connection);
     console.log(`Database ready: ${DB_DATABASE}`);
-    console.log('Tables ensured: users, activity_logs, zones, collection_routes, drivers, pickup_requests, driver_assignments');
+    console.log('Tables ensured: users, activity_logs, zones, plans, customers, collection_routes, drivers, pickup_requests, driver_assignments');
     console.log('Default login: admin / admin123');
   } finally {
     await connection.end();

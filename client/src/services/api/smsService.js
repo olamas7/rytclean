@@ -1,0 +1,10 @@
+import Axios from 'axios';
+const config = () => ({ headers: { 'x-access-token': localStorage.getItem('token') || '' } });
+export const getSmsSettings = async () => (await Axios.get('/api/admin/sms/settings', config())).data;
+export const saveSmsSettings = async (payload) => (await Axios.patch('/api/admin/sms/settings', payload, config())).data;
+export const getSmsLogs = async () => (await Axios.get('/api/admin/sms/logs', config())).data;
+export const sendTestSms = async (payload) => (await Axios.post('/api/admin/sms/test', payload, config())).data;
+export const getSmsWorkspaceOptions = async () => (await Axios.get('/api/sms/options', config())).data;
+export const previewSmsCampaign = async (payload) => (await Axios.post('/api/sms/campaigns/preview', payload, config())).data;
+export const sendSmsCampaign = async (id, payload) => (await Axios.post(`/api/sms/campaigns/${id}/send`, payload, config())).data;
+export const getSmsHistory = async (params) => (await Axios.get('/api/sms/history', { ...config(), params })).data;

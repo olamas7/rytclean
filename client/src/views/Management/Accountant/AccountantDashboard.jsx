@@ -1,94 +1,42 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Box, CircularProgress, Grid, Paper, Typography } from '@mui/material';
-import { getPayments, getRevenueSummary } from 'services/mockApi';
-
-const cardStyle = {
-    p: 2.25,
-    borderRadius: 2,
-    border: '1px solid',
-    borderColor: 'divider',
-    height: '100%'
-};
+import { useCallback, useEffect, useState } from 'react';
+import { Alert, Box, Grid, Paper, Skeleton, Typography } from '@mui/material';
+import { Link } from 'react-router-dom';
+import { getBillingAccounts, getBillingInvoices, getBillingPayments } from 'services/api/billingService';
+import { appRoutes } from 'constants/appRoutes';
+import { PageHeader } from 'ui-component/PageLayout';
+import { formatCurrency } from 'utils/formatters';
+import { LdButton } from 'utils/myButtons';
 
 const AccountantDashboard = () => {
+    const [data, setData] = useState({ accounts: [], invoices: [], payments: [] });
     const [loading, setLoading] = useState(true);
-    const [payments, setPayments] = useState([]);
-    const [summary, setSummary] = useState(null);
-
-    useEffect(() => {
-        const loadData = async () => {
-            setLoading(true);
-
-            const [paymentsRes, summaryRes] = await Promise.all([getPayments(), getRevenueSummary()]);
-
-            if (paymentsRes.code === 1) {
-                setPayments(paymentsRes.data);
-            }
-
-            if (summaryRes.code === 1) {
-                setSummary(summaryRes.data);
-            }
-
-            setLoading(false);
-        };
-
-        loadData();
+    const [error, setError] = useState('');
+    const load = useCallback(async () => {
+        setLoading(true); setError('');
+        try {
+            const responses = await Promise.all([getBillingAccounts(), getBillingInvoices(), getBillingPayments()]);
+            const failed = responses.find((response) => response.code !== 1);
+            if (failed) throw new Error(failed.message || 'Unable to load billing summary.');
+            setData({ accounts: responses[0].data, invoices: responses[1].data, payments: responses[2].data });
+        } catch (err) { setError(err.response?.data?.message || err.message); }
+        finally { setLoading(false); }
     }, []);
-
-    const stats = useMemo(() => {
-        const pendingPayments = payments.filter((payment) => payment.status === 'pending').length;
-        const paidInvoices = payments.filter((payment) => payment.status === 'paid').length;
-
-        return [
-            { label: 'Total Revenue', value: `GHS ${summary?.totalRevenue || 0}` },
-            { label: 'Pending Payments', value: pendingPayments },
-            { label: 'Paid Invoices', value: paidInvoices },
-            { label: 'Monthly Collection', value: `GHS ${summary?.monthlyCollection?.[3]?.amount || 0}` }
-        ];
-    }, [payments, summary]);
-
-    if (loading) {
-        return (
-            <Box sx={{ minHeight: 320, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <CircularProgress />
-            </Box>
-        );
-    }
-
-    return (
-        <Box sx={{ p: { xs: 1, md: 2 } }}>
-            <Typography variant="h2" sx={{ mb: 0.5 }}>
-                Accountant Dashboard
-            </Typography>
-            <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 3 }}>
-                Revenue and collection overview with payment performance snapshot.
-            </Typography>
-
-            <Grid container spacing={2.5}>
-                {stats.map((stat) => (
-                    <Grid item xs={12} sm={6} key={stat.label}>
-                        <Paper sx={cardStyle}>
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.75 }}>
-                                {stat.label}
-                            </Typography>
-                            <Typography variant="h4">{stat.value}</Typography>
-                        </Paper>
-                    </Grid>
-                ))}
-
-                <Grid item xs={12}>
-                    <Paper sx={{ ...cardStyle, p: 2.5 }}>
-                        <Typography variant="h4" sx={{ mb: 1.5 }}>
-                            Revenue Chart Placeholder
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            Monthly revenue chart will be connected here when chart library integration is enabled.
-                        </Typography>
-                    </Paper>
-                </Grid>
-            </Grid>
-        </Box>
-    );
+    useEffect(() => { load(); }, [load]);
+    const money = (cents) => formatCurrency(cents / 100);
+    const month = new Date().toISOString().slice(0, 7);
+    const paid = data.payments.filter((payment) => !payment.reversed);
+    const stats = [
+        ['Total Payments', money(paid.reduce((sum, row) => sum + row.amountCents, 0))],
+        ['This Month’s Payments', money(paid.filter((row) => row.date.startsWith(month)).reduce((sum, row) => sum + row.amountCents, 0))],
+        ['Client Amount Owing', money(data.accounts.reduce((sum, row) => sum + Math.max(0, row.balanceCents), 0))],
+        ['Client Credit', money(data.accounts.reduce((sum, row) => sum + Math.max(0, -row.balanceCents), 0))],
+        ['Overdue', money(data.accounts.reduce((sum, row) => sum + row.overdueCents, 0))],
+        ['Settled Bills', data.invoices.filter((invoice) => invoice.status === 'paid').length]
+    ];
+    return <Box sx={{ p: { xs: 1, md: 2 } }}>
+        <PageHeader title="Accountant Dashboard" description="Live subscription billing and recorded payments." actions={<><LdButton variant="outlined" loading={loading} onClick={load}>Refresh</LdButton><LdButton component={Link} to={appRoutes.management.admin.billing}>Client Accounts</LdButton></>} />
+        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {loading ? <Skeleton variant="rounded" height={300} /> : !error && <Grid container spacing={2}>{stats.map(([label, value]) => <Grid item xs={12} sm={6} md={4} key={label}><Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}><Typography variant="body2" color="text.secondary">{label}</Typography><Typography variant="h3" sx={{ mt: 1 }}>{value}</Typography></Paper></Grid>)}</Grid>}
+    </Box>;
 };
-
 export default AccountantDashboard;

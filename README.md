@@ -47,3 +47,16 @@ npm start
 
 Client: `http://localhost:8101`
 Server: `http://localhost:3101`
+
+## Google Maps
+
+Set `VITE_GOOGLE_MAPS_API_KEY` and `VITE_GOOGLE_MAPS_MAP_ID` in `client/.env`.
+Enable Maps JavaScript API and Places API (New), restrict the browser key to your websites, then restart the client.
+See [Google Maps integration](docs/google-maps.md) for features, configuration and limitations.
+
+## Client billing
+
+Open **Manager → Client Billing**, or the wallet action on a customer row, for account statements, bills, payments and receipts.
+Existing accounts require explicit monthly billing activation; the migration does not create historical arrears.
+Automatic billing is off by default and can be enabled under **Admin → Configuration → Billing**.
+See [subscription billing](docs/subscription-billing.md) for activation, scheduling, supported cycles and financial safeguards.
